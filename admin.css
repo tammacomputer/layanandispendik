@@ -1,0 +1,61 @@
+    body {
+        font-family: 'Poppins', sans-serif !important;
+    }
+
+    .datatable-container {
+        max-height: 60vh;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+
+    /* Perkecil ukuran SweetAlert */
+    .swal2-popup {
+        font-size: 0.85rem !important;
+        width: 24em !important;
+        padding: 1em !important;
+    }
+
+    .swal2-title {
+        font-size: 1.3em !important;
+    }
+
+    .swal2-icon {
+        transform: scale(0.7);
+        margin: 0.5em auto !important;
+    }
+
+    .table-action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    /* Menyembunyikan elipsis dan halaman lompatan dari simple-datatables agar hanya tampil 5 halaman berurutan + Prev/Next */
+    .dataTable-pagination .ellipsis {
+        display: none !important;
+    }
+
+    .dataTable-pagination li:nth-child(2):has(+ .ellipsis) {
+        display: none !important;
+    }
+
+    .dataTable-pagination .ellipsis+li:not(.pager) {
+        display: none !important;
+    }
+
+    /* Sidebar Hover Effect */
+    .sb-sidenav-menu .nav-link {
+        transition: all 0.3s ease-in-out;
+        border-radius: 8px;
+        margin: 2px 8px;
+        /* Jarak antar menu dan jarak sisi kiri/kanan */
+    }
+
+    .sb-sidenav-menu .nav-link:hover {
+        background-color: rgba(75, 73, 172, 0.1);
+        color: #4b49ac !important;
+        transform: translateX(5px);
+    }
+
+    .sb-sidenav-menu .nav-link:hover .sb-nav-link-icon {
+        color: #4b49ac !important;
+    }

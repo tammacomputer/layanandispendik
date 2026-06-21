@@ -1,0 +1,87 @@
+    body {
+        font-family: 'Poppins', sans-serif !important;
+        /* background-color: #f4f6f9; */
+        background-image: url('https://www.image2url.com/r2/default/images/1780938951745-60295512-386d-4d6b-bc3a-0a5e4fe74ce4.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    /* Memberikan efek overlay gelap transparan agar form login lebih menonjol */
+    #layoutAuthentication {
+        background-color: rgba(1, 47, 103, 0.45);
+        min-height: 100vh;
+        width: 100%;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Perkecil ukuran SweetAlert */
+    .swal2-popup {
+        font-size: 0.85rem !important;
+        width: 24em !important;
+        padding: 1em !important;
+    }
+
+    .swal2-title {
+        font-size: 1.3em !important;
+    }
+
+    .swal2-icon {
+        transform: scale(0.7);
+        margin: 0.5em auto !important;
+    }
+
+    .login-card {
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        border: none;
+    }
+
+    .branding-side {
+        background: linear-gradient(135deg, #4b49ac 0%, #255d83 100%);
+        color: white;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #3c8dbc;
+        box-shadow: 0 0 0 0.25rem rgba(60, 141, 188, 0.25);
+    }
+
+    .btn-primary {
+        background-color: #3c8dbc;
+        border-color: #3c8dbc;
+    }
+
+    .btn-primary:hover {
+        background-color: #255d83;
+        border-color: #255d83;
+    }
+
+    .sliding-container {
+        overflow: hidden;
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .sliding-wrapper {
+        display: flex;
+        width: 200%;
+        height: 100%;
+        transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .slide-panel {
+        width: 50%;
+        flex-shrink: 0;
+    }
