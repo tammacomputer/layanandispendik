@@ -825,3 +825,18 @@ function logoutApp() {
         window.location.reload();
     }
 }
+
+// Fungsi Toggle Password Visibility
+function togglePassword(inputId, btnEl) {
+    var input = document.getElementById(inputId);
+    var icon = btnEl.querySelector('i');
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    }
+}
