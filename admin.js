@@ -79,6 +79,7 @@ window.addEventListener('DOMContentLoaded', event => {
         dashboard: document.getElementById('menuDashboard'),
         manajemen: document.getElementById('menuManajemen'),
         pendataan: document.getElementById('menuPendataan'),
+        pengumuman: document.getElementById('menuPengumuman'),
         users: document.getElementById('menuUsers'),
         admin: document.getElementById('menuAdmin'),
         profil: document.getElementById('menuProfil')
@@ -88,6 +89,7 @@ window.addEventListener('DOMContentLoaded', event => {
         dashboard: document.getElementById('sectionDashboard'),
         manajemen: document.getElementById('sectionManajemen'),
         pendataan: document.getElementById('sectionPendataan'),
+        pengumuman: document.getElementById('sectionPengumuman'),
         users: document.getElementById('sectionUsers'),
         admin: document.getElementById('sectionAdmin'),
         profil: document.getElementById('sectionProfil')
@@ -125,6 +127,7 @@ window.addEventListener('DOMContentLoaded', event => {
     menus.dashboard.addEventListener('click', (e) => { e.preventDefault(); switchView('dashboard'); });
     menus.manajemen.addEventListener('click', (e) => { e.preventDefault(); switchView('manajemen'); });
     menus.pendataan.addEventListener('click', (e) => { e.preventDefault(); switchView('pendataan'); });
+    menus.pengumuman.addEventListener('click', (e) => { e.preventDefault(); switchView('pengumuman'); });
     menus.users.addEventListener('click', (e) => { e.preventDefault(); switchView('users'); });
     menus.admin.addEventListener('click', (e) => { e.preventDefault(); switchView('admin'); });
     menus.profil.addEventListener('click', (e) => { e.preventDefault(); switchView('profil'); });
@@ -2130,4 +2133,135 @@ function hapusKategoriLayananUI(rowIndex) {
 // Panggil loadKategoriLayanan() saat memuat DOM (admin interface)
 window.addEventListener('DOMContentLoaded', function () {
     loadKategoriLayanan();
+    loadPengumumanAdmin();
 });
+
+// ==========================================
+// LOGIKA PENGUMUMAN
+// ==========================================
+function loadPengumumanAdmin() {
+    var tbody = document.getElementById('bodyTablePengumuman');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-primary"><i class="fas fa-spinner fa-spin me-2"></i>Memuat pengumuman...</td></tr>';
+
+    if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+            .withSuccessHandler(function (data) {
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">
+                                <i class="fas fa-inbox fa-2x mb-3 opacity-50"></i>
+                                <p class="mb-0">Belum ada pengumuman yang diterbitkan.</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                var html = '';
+                data.forEach(function(item) {
+                    html += `
+                        <tr>
+                            <td class="ps-4"><span class="small fw-semibold">${escapeHTML(item.tanggal)}</span></td>
+                            <td>
+                                <div class="fw-bold text-primary mb-1">${escapeHTML(item.nama)}</div>
+                                <div class="small text-muted mb-1" style="display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHTML(item.keterangan)}</div>
+                                ${item.link ? `<a href="${item.link}" target="_blank" class="small"><i class="fas fa-link me-1"></i>${escapeHTML(item.link)}</a>` : ''}
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-danger shadow-sm" onclick="hapusPengumuman(${item.rowIndex})" title="Hapus Pengumuman">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            })
+            .withFailureHandler(function (error) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Gagal memuat pengumuman.</td></tr>';
+            })
+            .getPengumuman();
+    } else {
+        // mode preview local
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted fst-italic">Mode Preview Aktif.</td></tr>';
+    }
+}
+
+function simpanPengumuman(e) {
+    e.preventDefault();
+    var tanggal = document.getElementById('inputTanggalPengumuman').value;
+    var nama = document.getElementById('inputNamaPengumuman').value;
+    var keterangan = document.getElementById('inputKeteranganPengumuman').value;
+    var link = document.getElementById('inputLinkPengumuman').value;
+
+    if (!tanggal || !nama) {
+        Swal.fire('Perhatian', 'Tanggal dan Judul Pengumuman wajib diisi!', 'warning');
+        return;
+    }
+
+    var btn = document.getElementById('btnSimpanPengumuman');
+    var originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+
+    if (typeof google !== 'undefined' && google.script) {
+        var payload = {
+            tanggal: tanggal,
+            nama: nama,
+            keterangan: keterangan,
+            link: link
+        };
+        google.script.run
+            .withSuccessHandler(function (response) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                document.getElementById('formPengumuman').reset();
+                Swal.fire('Berhasil!', response.message, 'success');
+                loadPengumumanAdmin();
+            })
+            .withFailureHandler(function (error) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                Swal.fire('Gagal', error.message, 'error');
+            })
+            .simpanPengumumanApp(sessionStorage.getItem('authToken'), payload);
+    } else {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            document.getElementById('formPengumuman').reset();
+            Swal.fire('Simulasi', 'Pengumuman berhasil diterbitkan (Local).', 'success');
+        }, 800);
+    }
+}
+
+function hapusPengumuman(rowIndex) {
+    Swal.fire({
+        title: 'Hapus Pengumuman?',
+        text: 'Data yang dihapus tidak dapat dikembalikan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run
+                    .withSuccessHandler(function (response) {
+                        Swal.fire('Terhapus!', response.message, 'success');
+                        loadPengumumanAdmin();
+                    })
+                    .withFailureHandler(function (error) {
+                        Swal.fire('Gagal', error.message, 'error');
+                    })
+                    .hapusPengumumanApp(sessionStorage.getItem('authToken'), rowIndex);
+            } else {
+                Swal.fire('Simulasi', 'Pengumuman telah dihapus (Local).', 'success');
+            }
+        }
+    });
+}

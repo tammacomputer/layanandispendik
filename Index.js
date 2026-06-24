@@ -807,7 +807,50 @@ window.addEventListener('DOMContentLoaded', event => {
     // ==========================================
     // Kategori Layanan Dinamis kini dimuat dalam loadInitialData()
     // ==========================================
+    
+    loadPengumumanUser();
 });
+
+function loadPengumumanUser() {
+    if (typeof google !== 'undefined' && google.script) {
+        google.script.run
+            .withSuccessHandler(function (data) {
+                if (data && data.length > 0) {
+                    var latest = data[0]; 
+                    
+                    var h5s = document.querySelectorAll('#teksPengumuman')[0].parentNode.querySelectorAll('h5');
+                    if (h5s.length > 0) {
+                        h5s[0].innerText = latest.nama;
+                    }
+                    
+                    var teksEl = document.getElementById('teksPengumuman');
+                    if (teksEl) teksEl.innerText = latest.keterangan;
+                    
+                    var linkBtn = document.getElementById('linkPengumuman');
+                    if (linkBtn) {
+                        if (latest.link) {
+                            linkBtn.href = latest.link;
+                            linkBtn.style.display = 'inline-block';
+                        } else {
+                            linkBtn.style.display = 'none';
+                        }
+                    }
+                } else {
+                    var linkBtn = document.getElementById('linkPengumuman');
+                    if (linkBtn) linkBtn.style.display = 'none';
+                }
+            })
+            .withFailureHandler(function (error) {
+                console.error("Gagal memuat pengumuman:", error);
+            })
+            .getPengumuman();
+    } else {
+        var linkBtn = document.getElementById('linkPengumuman');
+        if (linkBtn) linkBtn.style.display = 'none';
+        var teksEl = document.getElementById('teksPengumuman');
+        if (teksEl) teksEl.innerText = "Mode Preview: Koneksi backend terputus.";
+    }
+}
 
 function logoutApp() {
     var token = sessionStorage.getItem('authToken');
