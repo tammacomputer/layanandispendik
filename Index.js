@@ -815,7 +815,9 @@ function loadPengumumanUser() {
     if (typeof google !== 'undefined' && google.script) {
         google.script.run
             .withSuccessHandler(function (data) {
+                var cardEl = document.getElementById('cardPengumumanDashboard');
                 if (data && data.length > 0) {
+                    if (cardEl) cardEl.classList.remove('d-none');
                     var latest = data[0]; 
                     
                     var h5s = document.querySelectorAll('#teksPengumuman')[0].parentNode.querySelectorAll('h5');
@@ -836,15 +838,18 @@ function loadPengumumanUser() {
                         }
                     }
                 } else {
-                    var linkBtn = document.getElementById('linkPengumuman');
-                    if (linkBtn) linkBtn.style.display = 'none';
+                    if (cardEl) cardEl.classList.add('d-none');
                 }
             })
             .withFailureHandler(function (error) {
                 console.error("Gagal memuat pengumuman:", error);
+                var cardEl = document.getElementById('cardPengumumanDashboard');
+                if (cardEl) cardEl.classList.add('d-none');
             })
             .getPengumuman();
     } else {
+        var cardEl = document.getElementById('cardPengumumanDashboard');
+        if (cardEl) cardEl.classList.remove('d-none');
         var linkBtn = document.getElementById('linkPengumuman');
         if (linkBtn) linkBtn.style.display = 'none';
         var teksEl = document.getElementById('teksPengumuman');
