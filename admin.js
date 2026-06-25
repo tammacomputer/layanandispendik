@@ -2226,7 +2226,7 @@ function simpanPengumuman(e) {
     var btn = document.getElementById('btnSimpanPengumuman');
     var originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses V2...';
 
     if (typeof google !== 'undefined' && google.script) {
         var payload = {
@@ -2238,13 +2238,17 @@ function simpanPengumuman(e) {
         };
         try {
             google.script.run
-                .withSuccessHandler(function (response) {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    document.getElementById('formPengumuman').reset();
-                    Swal.fire('Berhasil!', response.message, 'success');
-                    loadPengumumanAdmin();
-                })
+                    .withSuccessHandler(function (response) {
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        if (response && response.success) {
+                            document.getElementById('formPengumuman').reset();
+                            Swal.fire('Berhasil!', response.message, 'success');
+                            loadPengumumanAdmin();
+                        } else {
+                            Swal.fire('Gagal', (response && response.message) ? response.message : 'Terjadi kesalahan tidak diketahui di server', 'error');
+                        }
+                    })
                 .withFailureHandler(function (error) {
                     btn.disabled = false;
                     btn.innerHTML = originalText;
