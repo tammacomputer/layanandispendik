@@ -844,7 +844,7 @@ function loadPengumumanUser() {
                         
                         var jenjangArray = item.jenjang.split(',').map(function(s) { return s.toLowerCase().trim(); });
                         
-                        if (userJenjangArray.length === 0) return true; // If user has no specific jenjang assigned, show all
+                        if (userJenjangArray.length === 0) return false;
 
                         // Cek apakah ada irisan antara jenjang user dan jenjang pengumuman
                         for(var i=0; i<userJenjangArray.length; i++) {
