@@ -2202,6 +2202,12 @@ function simpanPengumuman(e) {
         return;
     }
 
+    var jenjangChecked = [];
+    var cbJenjang = document.querySelectorAll('.cb-jenjang-pengumuman:checked');
+    cbJenjang.forEach(function(cb) {
+        jenjangChecked.push(cb.value);
+    });
+
     var btn = document.getElementById('btnSimpanPengumuman');
     var originalText = btn.innerHTML;
     btn.disabled = true;
@@ -2212,7 +2218,8 @@ function simpanPengumuman(e) {
             tanggal: tanggal,
             nama: nama,
             keterangan: keterangan,
-            link: link
+            link: link,
+            jenjang: jenjangChecked.join(', ')
         };
         google.script.run
             .withSuccessHandler(function (response) {

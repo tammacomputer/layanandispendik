@@ -815,10 +815,22 @@ function loadPengumumanUser() {
     if (typeof google !== 'undefined' && google.script) {
         google.script.run
             .withSuccessHandler(function (data) {
-                var cardEl = document.getElementById('cardPengumumanDashboard');
+                var userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                var userJenjang = userData.jenjang || '';
+
+                var filteredData = data;
                 if (data && data.length > 0) {
+                    filteredData = data.filter(function(item) {
+                        if (!item.jenjang || item.jenjang.trim() === '') return true;
+                        var jenjangArray = item.jenjang.split(',').map(function(s) { return s.trim(); });
+                        return jenjangArray.includes(userJenjang);
+                    });
+                }
+
+                var cardEl = document.getElementById('cardPengumumanDashboard');
+                if (filteredData && filteredData.length > 0) {
                     if (cardEl) cardEl.classList.remove('d-none');
-                    var latest = data[0]; 
+                    var latest = filteredData[0]; 
                     
                     var h5s = document.querySelectorAll('#teksPengumuman')[0].parentNode.querySelectorAll('h5');
                     if (h5s.length > 0) {
