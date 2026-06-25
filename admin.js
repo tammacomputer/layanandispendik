@@ -2236,20 +2236,27 @@ function simpanPengumuman(e) {
             link: link,
             jenjang: jenjangChecked.join(', ')
         };
-        google.script.run
-            .withSuccessHandler(function (response) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                document.getElementById('formPengumuman').reset();
-                Swal.fire('Berhasil!', response.message, 'success');
-                loadPengumumanAdmin();
-            })
-            .withFailureHandler(function (error) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                Swal.fire('Gagal', error.message, 'error');
-            })
-            .simpanPengumumanApp(sessionStorage.getItem('authToken'), payload);
+        try {
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    document.getElementById('formPengumuman').reset();
+                    Swal.fire('Berhasil!', response.message, 'success');
+                    loadPengumumanAdmin();
+                })
+                .withFailureHandler(function (error) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    Swal.fire('Gagal', error.message, 'error');
+                })
+                .simpanPengumumanApp(sessionStorage.getItem('authToken'), payload);
+        } catch (err) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            console.error("Client Error:", err);
+            Swal.fire('Error Sistem', 'Fungsi tidak ditemukan. Pastikan sudah melakukan Deploy versi terbaru.', 'error');
+        }
     } else {
         setTimeout(() => {
             btn.disabled = false;
