@@ -2145,6 +2145,7 @@ function hapusKategoriLayananUI(rowIndex) {
 }
 
 
+
 // Panggil loadKategoriLayanan() saat memuat DOM (admin interface)
 window.addEventListener('DOMContentLoaded', function () {
     loadKategoriLayanan();
@@ -2174,14 +2175,16 @@ function loadPengumumanAdmin() {
                     `;
                     return;
                 }
-
                 var html = '';
                 data.forEach(function(item) {
                     html += `
                         <tr>
                             <td class="ps-4"><span class="small fw-semibold">${escapeHTML(item.tanggal)}</span></td>
                             <td>
-                                <div class="fw-bold text-primary mb-1">${escapeHTML(item.nama)}</div>
+                                <div class="fw-bold text-primary mb-1">
+                                    ${escapeHTML(item.nama)}
+                                    ${item.jenjang ? `<span class="badge bg-info ms-2" style="font-size: 0.7em;">${escapeHTML(item.jenjang)}</span>` : `<span class="badge bg-secondary ms-2" style="font-size: 0.7em;">Global</span>`}
+                                </div>
                                 <div class="small text-muted mb-1" style="display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHTML(item.keterangan)}</div>
                                 ${item.link ? `<a href="${item.link}" target="_blank" class="small"><i class="fas fa-link me-1"></i>${escapeHTML(item.link)}</a>` : ''}
                             </td>
