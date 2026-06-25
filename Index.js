@@ -844,14 +844,22 @@ function loadPengumumanUser() {
                         
                         var jenjangArray = item.jenjang.split(',').map(function(s) { return s.toLowerCase().trim(); });
                         
+                        console.log("DEBUG PENGUMUMAN:", {
+                            judul: item.nama,
+                            pengumumanJenjang: jenjangArray,
+                            userJenjang: userJenjangArray
+                        });
+
                         if (userJenjangArray.length === 0) return false;
 
                         // Cek apakah ada irisan antara jenjang user dan jenjang pengumuman
                         for(var i=0; i<userJenjangArray.length; i++) {
                             if (jenjangArray.includes(userJenjangArray[i])) {
+                                console.log("DEBUG: Cocok! Menampilkan pengumuman ini.");
                                 return true;
                             }
                         }
+                        console.log("DEBUG: Tidak cocok. Disembunyikan.");
                         return false;
                     });
                 }
