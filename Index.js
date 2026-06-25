@@ -84,46 +84,74 @@ window.addEventListener('DOMContentLoaded', event => {
     });
     menus.unduhan.addEventListener('click', (e) => { e.preventDefault(); switchView('unduhan'); });
 
-    var userDataStr = sessionStorage.getItem('userData');
-    if (userDataStr) {
-        try {
-            var user = JSON.parse(userDataStr);
+    var token = sessionStorage.getItem('authToken');
+    if (!token) {
+        logoutApp();
+        return;
+    }
 
-            // Set Navbar Name
-            var navName = document.getElementById('navbarUserName');
-            if (navName) navName.innerText = user.nama || user.name || "";
+    if (typeof google !== 'undefined' && google.script) {
+        // Tampilkan loading state sederhana di Navbar jika perlu
+        var navName = document.getElementById('navbarUserName');
+        if (navName) navName.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
 
-            // Set Form Readonly Pengajuan
-            document.getElementById('namaLengkap').value = user.nama || user.name || "";
-            document.getElementById('jabatan').value = user.jabatan || user.role || "";
-            document.getElementById('npsn').value = user.npsn || "";
-            document.getElementById('satuanPendidikan').value = user.sekolah || "";
-            document.getElementById('jenjang').value = user.jenjang || "";
-            document.getElementById('statusSekolah').value = user.status_sekolah || "";
-            document.getElementById('kecamatan').value = user.kecamatan || "";
+        google.script.run
+            .withSuccessHandler(function (user) {
+                if (!user) {
+                    logoutApp();
+                    return;
+                }
+                
+                window.currentUserData = user; // Simpan di global memory
 
-            // Set Info Profil UI
-            document.getElementById('profilNama').innerText = user.nama || user.name || "Nama Tidak Tersedia";
-            document.getElementById('profilJabatan').innerText = user.jabatan || user.role || "-";
-            document.getElementById('profilSekolah').innerText = user.sekolah || "-";
-            document.getElementById('profilInfoNPSN').innerText = user.npsn || "-";
+                // Set Navbar Name
+                if (navName) navName.innerText = user.nama || user.name || "";
 
-            var elKecamatan = document.getElementById('profilKecamatan');
-            if (elKecamatan) elKecamatan.innerText = user.kecamatan || "-";
+                // Set Form Readonly Pengajuan
+                var setVal = (id, val) => { var el = document.getElementById(id); if(el) el.value = val; };
+                setVal('namaLengkap', user.nama || user.name || "");
+                setVal('jabatan', user.jabatan || user.role || "");
+                setVal('npsn', user.npsn || "");
+                setVal('satuanPendidikan', user.sekolah || "");
+                setVal('jenjang', user.jenjang || "");
+                setVal('statusSekolah', user.status_sekolah || "");
+                setVal('kecamatan', user.kecamatan || "");
 
-            // Set Nilai Input untuk Form Edit Profil
-            var elEditNama = document.getElementById('editNama');
-            if (elEditNama) elEditNama.value = user.nama || user.name || "";
+                // Set Info Profil UI
+                var setText = (id, val) => { var el = document.getElementById(id); if(el) el.innerText = val; };
+                setText('profilNama', user.nama || user.name || "Nama Tidak Tersedia");
+                setText('profilJabatan', user.jabatan || user.role || "-");
+                setText('profilSekolah', user.sekolah || "-");
+                setText('profilInfoNPSN', user.npsn || "-");
+                setText('profilKecamatan', user.kecamatan || "-");
 
-            // Set Username untuk Ubah Password 
-            document.getElementById('profilUsername').value = user.username || user.npsn || "";
+                // Set Nilai Input untuk Form Edit Profil
+                setVal('editNama', user.nama || user.name || "");
 
-            // Muat Data Awal Dashboard secara bersamaan (Notifikasi, Riwayat, Kategori)
-            loadInitialData(user.npsn || "");
+                // Set Username untuk Ubah Password 
+                setVal('profilUsername', user.username || user.npsn || "");
 
-        } catch (e) {
-            console.error("Gagal memparsing data user:", e);
-        }
+                // Muat Data Awal Dashboard secara bersamaan (Notifikasi, Riwayat, Kategori)
+                loadInitialData(user.npsn || "");
+            })
+            .withFailureHandler(function (error) {
+                console.error("Gagal mengambil data user:", error);
+                logoutApp();
+            })
+            .getFreshUserProfile(token);
+    } else {
+        // Fallback Mode Preview
+        window.currentUserData = {
+            nama: "Preview User",
+            jabatan: "Operator",
+            npsn: "12345678",
+            jenjang: "SD",
+            sekolah: "SDN Preview",
+            role: "user"
+        };
+        var navName = document.getElementById('navbarUserName');
+        if (navName) navName.innerText = window.currentUserData.nama;
+        loadInitialData("12345678");
     }
 
     // Fungsi Memuat Data Awal Secara Bersamaan
@@ -273,13 +301,9 @@ window.addEventListener('DOMContentLoaded', event => {
             this.disabled = true;
             this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyegarkan...';
 
-            var userStr = sessionStorage.getItem('userData');
             var npsn = "";
-            if (userStr) {
-                try {
-                    var user = JSON.parse(userStr);
-                    npsn = user.npsn || "";
-                } catch (e) { }
+            if (window.currentUserData) {
+                npsn = window.currentUserData.npsn || "";
             }
 
             // Panggil ulang loadInitialData
@@ -341,11 +365,8 @@ window.addEventListener('DOMContentLoaded', event => {
                     if (nameResponse.success) {
 
                         // Live Update UI Nama di Layar
-                        var userStr = sessionStorage.getItem('userData');
-                        if (userStr) {
-                            var userObj = JSON.parse(userStr);
-                            userObj.nama = nameResponse.newName;
-                            sessionStorage.setItem('userData', JSON.stringify(userObj));
+                        if (window.currentUserData) {
+                            window.currentUserData.nama = nameResponse.newName;
                         }
                         document.getElementById('profilNama').innerText = nameResponse.newName;
                         var navName = document.getElementById('navbarUserName');
@@ -530,9 +551,7 @@ window.addEventListener('DOMContentLoaded', event => {
                         currentFormId = response.idForm;
                         const schema = JSON.parse(response.formJson);
 
-                        const userStr = sessionStorage.getItem('userData');
-                        const userObj = userStr ? JSON.parse(userStr) : {};
-                        const npsn = userObj.npsn || "";
+                        const npsn = window.currentUserData ? (window.currentUserData.npsn || "") : "";
 
                         google.script.run
                             .withSuccessHandler(function (ansRes) {
@@ -766,8 +785,7 @@ window.addEventListener('DOMContentLoaded', event => {
             }
         }
 
-        const userStr = sessionStorage.getItem('userData');
-        const userObj = userStr ? JSON.parse(userStr) : {};
+        const userObj = window.currentUserData || {};
 
         const payload = {
             idForm: currentFormId,
@@ -815,15 +833,26 @@ function loadPengumumanUser() {
     if (typeof google !== 'undefined' && google.script) {
         google.script.run
             .withSuccessHandler(function (data) {
-                var userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-                var userJenjang = userData.jenjang || '';
+                var userData = window.currentUserData || {};
+                var userJenjangStr = (userData.jenjang || '').toLowerCase();
+                var userJenjangArray = userJenjangStr.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s !== ''; });
 
                 var filteredData = data;
                 if (data && data.length > 0) {
                     filteredData = data.filter(function(item) {
                         if (!item.jenjang || item.jenjang.trim() === '') return true;
-                        var jenjangArray = item.jenjang.split(',').map(function(s) { return s.trim(); });
-                        return jenjangArray.includes(userJenjang);
+                        
+                        var jenjangArray = item.jenjang.split(',').map(function(s) { return s.toLowerCase().trim(); });
+                        
+                        if (userJenjangArray.length === 0) return true; // If user has no specific jenjang assigned, show all
+
+                        // Cek apakah ada irisan antara jenjang user dan jenjang pengumuman
+                        for(var i=0; i<userJenjangArray.length; i++) {
+                            if (jenjangArray.includes(userJenjangArray[i])) {
+                                return true;
+                            }
+                        }
+                        return false;
                     });
                 }
 

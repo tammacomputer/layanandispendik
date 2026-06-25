@@ -1,10 +1,9 @@
-
 // Blokir akses jika belum login ATAU jika bukan admin
 var isLoggedIn = sessionStorage.getItem('isLoggedIn');
-var userDataStr = sessionStorage.getItem('userData');
+var userRole = sessionStorage.getItem('userRole') || "";
 
 var token = sessionStorage.getItem('authToken');
-if (isLoggedIn !== 'true' || !userDataStr || !token) {
+if (isLoggedIn !== 'true' || !token) {
     document.documentElement.style.display = 'none';
     if (typeof SCRIPT_URL !== 'undefined' && SCRIPT_URL) {
         window.top.location.href = SCRIPT_URL + "?page=login";
@@ -16,8 +15,7 @@ if (isLoggedIn !== 'true' || !userDataStr || !token) {
         window.location.href = "login.html";
     }
 } else {
-    var userCheck = JSON.parse(userDataStr);
-    var roleCheck = (userCheck.role || userCheck.jabatan || "").toLowerCase();
+    var roleCheck = userRole.toLowerCase();
 
     // Proteksi: Hanya boleh masuk jika role mengandung 'admin'
     if (!roleCheck.includes('admin') && !roleCheck.includes('super admin')) {
@@ -133,24 +131,46 @@ window.addEventListener('DOMContentLoaded', event => {
     menus.profil.addEventListener('click', (e) => { e.preventDefault(); switchView('profil'); });
 
     // Muat Profil User
-    var userDataStr = sessionStorage.getItem('userData');
-    if (userDataStr) {
-        try {
-            var user = JSON.parse(userDataStr);
+    var token = sessionStorage.getItem('authToken');
+    if (typeof google !== 'undefined' && google.script) {
+        var navName = document.getElementById('navbarUserName');
+        if (navName) navName.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
 
-            document.getElementById('navbarUserName').innerText = user.nama || "Admin";
-            document.getElementById('profilNama').innerText = user.nama || "Admin";
-            document.getElementById('profilJabatan').innerText = (user.jabatan || "-").toUpperCase();
+        google.script.run
+            .withSuccessHandler(function (user) {
+                if (!user) {
+                    logoutApp();
+                    return;
+                }
+                window.currentUserData = user;
 
-            document.getElementById('editNama').value = user.nama || "";
-            document.getElementById('profilUsername').value = user.username || user.npsn || "";
+                document.getElementById('navbarUserName').innerText = user.nama || "Admin";
+                document.getElementById('profilNama').innerText = user.nama || "Admin";
+                document.getElementById('profilJabatan').innerText = (user.jabatan || "-").toUpperCase();
 
-            // Muat semua pengajuan untuk dashboard admin
-            loadSemuaPengajuan();
+                document.getElementById('editNama').value = user.nama || "";
+                document.getElementById('profilUsername').value = user.username || user.npsn || "";
 
-        } catch (e) {
-            console.error("Gagal memparsing data user:", e);
-        }
+                // Muat semua pengajuan untuk dashboard admin
+                loadSemuaPengajuan();
+            })
+            .withFailureHandler(function (error) {
+                console.error("Gagal mengambil data user:", error);
+                logoutApp();
+            })
+            .getFreshUserProfile(token);
+    } else {
+        window.currentUserData = {
+            nama: "Admin Preview",
+            jabatan: "Super Admin",
+            username: "admin123"
+        };
+        document.getElementById('navbarUserName').innerText = window.currentUserData.nama;
+        document.getElementById('profilNama').innerText = window.currentUserData.nama;
+        document.getElementById('profilJabatan').innerText = window.currentUserData.jabatan;
+        document.getElementById('editNama').value = window.currentUserData.nama;
+        document.getElementById('profilUsername').value = window.currentUserData.username;
+        loadSemuaPengajuan();
     }
 
     // Form Update Akun
@@ -188,11 +208,8 @@ window.addEventListener('DOMContentLoaded', event => {
             google.script.run
                 .withSuccessHandler(function (nameResponse) {
                     if (nameResponse.success) {
-                        var userStr = sessionStorage.getItem('userData');
-                        if (userStr) {
-                            var userObj = JSON.parse(userStr);
-                            userObj.nama = nameResponse.newName;
-                            sessionStorage.setItem('userData', JSON.stringify(userObj));
+                        if (window.currentUserData) {
+                            window.currentUserData.nama = nameResponse.newName;
                         }
                         document.getElementById('profilNama').innerText = nameResponse.newName;
                         document.getElementById('navbarUserName').innerText = nameResponse.newName;
@@ -217,7 +234,7 @@ window.addEventListener('DOMContentLoaded', event => {
                                     btn.innerHTML = originalText;
                                     Swal.fire('Error Sistem', 'Profil tersimpan, namun terjadi kesalahan server saat merubah password.', 'error');
                                 })
-                                .changeUserPassword(username, oldPass, newPass);
+                                .changeUserPassword(sessionStorage.getItem('authToken'), username, oldPass, newPass);
                         } else {
                             btn.disabled = false;
                             btn.innerHTML = originalText;
@@ -234,7 +251,7 @@ window.addEventListener('DOMContentLoaded', event => {
                     btn.innerHTML = originalText;
                     Swal.fire('Error Sistem', 'Terjadi kesalahan saat menghubungi server.', 'error');
                 })
-                .changeUserName(username, newName);
+                .changeUserName(sessionStorage.getItem('authToken'), username, newName);
         } else {
             // Simulasi Lokal
             setTimeout(() => {
@@ -1366,10 +1383,9 @@ function renderDataUsersPaginated(response) {
 
         var isSuperAdmin = false;
         try {
-            var userStr = sessionStorage.getItem('userData');
-            if (userStr) {
-                var u = JSON.parse(userStr);
-                if (u.role === 'superadmin' || u.role === 'super admin') isSuperAdmin = true;
+            if (window.currentUserData) {
+                var r = (window.currentUserData.role || window.currentUserData.jabatan || "").toLowerCase();
+                if (r === 'superadmin' || r === 'super admin') isSuperAdmin = true;
             }
         } catch (e) { }
 
@@ -1726,8 +1742,7 @@ function renderDataAdminPaginated(response) {
     } else {
         currentDataAdmin = data;
         var htmlContent = [];
-        var currentUserStr = sessionStorage.getItem('userData');
-        var currentUser = currentUserStr ? JSON.parse(currentUserStr).username : "";
+        var currentUser = window.currentUserData ? window.currentUserData.username : "";
 
         for (var i = 0; i < data.length; i++) {
             var row = data[i];

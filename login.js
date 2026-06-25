@@ -14,9 +14,7 @@
     // Cek status login dan alihkan ke dashboard yang sesuai
     if (sessionStorage.getItem('isLoggedIn') === 'true' && sessionStorage.getItem('authToken')) {
         document.body.style.display = 'none';
-        var userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-        // Penyesuaian fallback jika data.role kosong
-        var roleInfo = (userData.role || userData.jabatan || "user").toLowerCase();
+        var roleInfo = (sessionStorage.getItem('userRole') || "user").toLowerCase();
 
         // Cek apakah user adalah admin atau super admin
         var targetPage = (roleInfo.includes('admin') || roleInfo.includes('super')) ? 'admin' : 'Index';
@@ -193,12 +191,7 @@
                     timer: 1500
                 }).then(() => {
                     sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('userData', JSON.stringify({
-                        nama: roleSimulasi + " Preview",
-                        jabatan: roleSimulasi,
-                        role: roleSimulasi,
-                        npsn: "12345678"
-                    }));
+                    sessionStorage.setItem('userRole', roleSimulasi);
                     window.open(targetSimulasi, "_top"); // Redirect untuk preview lokal
                 });
             }, 1000);
@@ -212,15 +205,11 @@
                 if (response.success) {
                     sessionStorage.setItem('isLoggedIn', 'true');
 
-                    // Mencegah error jika data role dari Apps Script kosong
-                    if (!response.user.role && !response.user.jabatan) {
-                        response.user.role = tipeLogin;
-                    }
-                    sessionStorage.setItem('userData', JSON.stringify(response.user));
+                    var roleInfo = (response.user.role || response.user.jabatan || tipeLogin).toLowerCase();
+                    sessionStorage.setItem('userRole', roleInfo);
                     sessionStorage.setItem('authToken', response.token);
 
                     // Menentukan tujuan halaman berdasarkan role user
-                    var roleInfo = (response.user.role || response.user.jabatan || tipeLogin).toLowerCase();
                     var targetPage = (roleInfo.includes('admin') || roleInfo.includes('super')) ? 'admin' : 'Index';
 
                     // Mempercepat login dengan memproses redirect secara instan tanpa pesan animasi
